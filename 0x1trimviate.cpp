@@ -35,7 +35,7 @@ vector<Point> originalFriends;
 
 vector<Point> Friends;
 
-int friendssize = 0;
+long unsigned int friendssize = 0;
 
 
 
@@ -66,13 +66,21 @@ double findDistance(Point a, Point b){
 double findDistanceSimilarity(Point mostDense, TwoViate b){
     double distanceA = findDistance(mostDense, b.one);
     double distanceB = findDistance(mostDense, b.two);
-    return abs(distanceA - distanceB);
+    double distanceC = findDistance(b.one, b.two);
+    double average = (distanceA + distanceB + distanceC) / 3;
+    double totaldeviations = 0;
+    totaldeviations += abs(distanceA - average);
+    totaldeviations += abs(distanceB - average);
+    totaldeviations += abs(distanceC - average);
+    return totaldeviations;
 }
 
 Point findMostDensePoint(){
-    for(long unsigned int i = 0; i < Friends.size(); i++){
-        Friends[i].density = 0;
-    }
+    // return Friends[0];
+
+    // for(long unsigned int i = 0; i < Friends.size(); i++){
+    //     Friends[i].density = 0;
+    // }
 
     //populate density
     for(long unsigned int i = 0; i < Friends.size(); i++)
@@ -82,7 +90,7 @@ Point findMostDensePoint(){
             if (j != i)
             {
                 double distance = findDistance(Friends[i], Friends[j]);
-                double densityy = 1/pow(2.1,distance);
+                double densityy = 1/distance;
                 Friends[i].density+= densityy;
             }
             else{
@@ -92,7 +100,7 @@ Point findMostDensePoint(){
     }
 
     // sort the vector by density
-    sort(Friends.begin(), Friends.end(), [](const Point& a, const Point& b) { return a.density > b.density; });
+    sort(Friends.begin(), Friends.end(), [](const Point& a, const Point& b) { return a.density < b.density; });
 
     return Friends[0];
 }
@@ -128,7 +136,7 @@ int main() {
         // populate twoviates for the most dense point
         for(long unsigned int i = 0; i < Friends.size(); i++)
         {
-            for(int j = 0; j < Friends.size(); j++)
+            for(long unsigned int j = 0; j < Friends.size(); j++)
             {
                 if ((Friends[i] == mostDense) || (Friends[j] == mostDense)|| (Friends[i] == Friends[j])) 
                 {
@@ -174,7 +182,6 @@ int main() {
         Friends.erase(Friends.begin());
     }
     vector<vector<int>> output;
-    int iteration = 0;
     for(Triviate i: Triviates){
         vector<int> line;
         line.push_back(getIndex(originalFriends,i.one));

@@ -6,8 +6,6 @@
 #include <cmath>
 
 using namespace std;
-static int minrand = 1;
-static int maxrand = 100;
 
 struct Point {
     double x=0;
@@ -22,6 +20,10 @@ struct Point {
     }
 };
 
+double findDistance(Point a, Point b){
+    return sqrt(pow(a.x - b.x, 2) + pow(a.y - b.y, 2));
+}
+
 struct Triviate{
     Point one = Point();
     Point two=Point();
@@ -31,25 +33,105 @@ struct Triviate{
     double twothree = 0;
     double max = 0;
     double min = 0;
+    double stability = 0;
 
-    bool operator == (const Triviate& other) const {
-        return ((one == other.one && two == other.two && three == other.three)
-        ||(one == other.one && two == other.three && three == other.two)
-        ||(one == other.two && two == other.one && three == other.three)
-        ||(one == other.three && two == other.two && three == other.one));
+    double maxDistance(){
+        double max = 0;
+        if (onetwo > max){
+            max = onetwo;
+        }
+        if (onethree > max){
+            max = onethree;
+        }
+        if (twothree > max){
+            max = twothree;
+        }
+        return max;
+    }
+
+    double minDistance(){
+        double min = 0;
+        if (onetwo < min){
+            min = onetwo;
+        }
+        if (onethree < min){
+            min = onethree;
+        }
+        if (twothree < min){
+            min = twothree;
+        }
+        return min;
+    }
+
+    double getDistance(){
+        return maxDistance() - minDistance();
+    }
+
+    double getOneThree(){
+        return findDistance(this->one, this->three);
+    }
+
+    double getOneTwo(){
+        return findDistance(this->one, this->two);
+    }
+
+    double getTwoThree(){
+        return findDistance(this->two, this->three);
+    }
+
+    Triviate(Point one, Point twoo, Point three){
+        this->one = one;
+        this->two = twoo;
+        this->three = three;
+        onetwo = getOneTwo();
+        onethree = getOneThree();
+        twothree = getTwoThree();
+        max = maxDistance();
+        min = minDistance();
+        stability = getDistance();
+    }
+
+    Triviate(){
+        one = Point();
+        two = Point();
+        three = Point();
+        onetwo = 0;
+        onethree = 0;
+        twothree = 0;
+        max = 0;
+        min = 0;
+        stability = 0;
     }
 };
 
+struct StateViate{
+    Triviate one = Triviate();
+    Triviate two = Triviate();
+    Triviate three = Triviate();
+    double cost = 0;
 
-vector<Triviate> Triviates;
-vector<Point> originalFriends;
-vector<Point> Friends;
-int friendssize = 0;
-
-
-double findDistance(Point a, Point b){
-    return sqrt(pow(a.x - b.x, 2) + pow(a.y - b.y, 2));
-}
+    double getCost(){
+        return one.stability + two.stability + three.stability;
+    }
+    StateViate(Triviate one, Triviate two, Triviate three){
+        this->one = one;
+        this->two = two;
+        this->three = three;
+        cost = getCost();
+    }
+    StateViate(Point one1, Point two1, Point three1, Point one2, Point two2, Point three2, Point one3, Point two3, Point three3){
+        this->one = Triviate(one1, two1, three1);
+        this->two = Triviate(one2, two2, three2);
+        this->three = Triviate(one3, two3, three3);
+        cost = getCost();
+    }
+    StateViate(){
+        one = Triviate();
+        two = Triviate();
+        three = Triviate();
+        cost = 0;
+    }
+};
 
 
 
@@ -73,111 +155,40 @@ int getIndex(vector<Point> v, Point K)
     }
 }
 
+int generateRandomNumber() {
+    std::random_device rd;  // Obtain a random number from hardware
+    std::mt19937 gen(rd()); // Seed the generator
+    std::uniform_real_distribution<> distr(0, 9); // Define the range
+    return distr(gen);
+}
+
 
 int main() {
 
     vector<vector<int>> output;
-    std::set <Triviate> TriviateSet;
+    vector<Point> Friends;
 
-    // int maxinput;
+    long unsigned int friendssize = 0;
     cin>>friendssize;
-    // for(int i =0; i< ;i++){
-    //     int a, b;
-    //     cin >> a >> b;
-    //     //cout<<a <<" "<<b;
-    // }
 
     //populate friends vector
-    for(int i = 0; i < friendssize; i++)
+    for(long unsigned int i = 0; i < friendssize; i++)
     {
         int a, b;
         cin >> a >> b;
-        // //cout<<a <<" "<<b;
         Point point;
         point.x = a;
         point.y = b;
         Friends.push_back(point);
     }
-    originalFriends = Friends;
 
-    for (int i = 0; i < Friends.size(); i++)
-    {
-        for (int j = 0; j < Friends.size(); j++)
-        {
-           for(int k = 0; k < Friends.size(); k++)
-           {
-               if (j != i && k != i && k != j)
-               {
-                   Triviate currentTri;
-                   currentTri.one = Friends[i];
-                   currentTri.two = Friends[j];
-                   currentTri.three = Friends[k];
-                   if(TriviateSet.find(currentTri) == TriviateSet.end())
-                   {
-                        Triviates.push_back(currentTri);
-                   }
-                   else{
-                        continue;
-                   }
-               }
-           }
-        }
-
+    double bestCost = 1000000000;
+    StateViate bestState = StateViate();
+    int consecutivenegatives = 0;
+    bool lastWasNegative = false;
+    while (consecutivenegatives < 21){
+        cout << "Consecutive negatives: " << consecutivenegatives << endl;
+        consecutivenegatives += 1;
     }
-
-    //populate onetwo, onethree, twothree distances
-    for (int i = 0; i < Triviates.size(); i++)
-    {
-        Triviates[i].onetwo = findDistance(Triviates[i].one, Triviates[i].two);
-        Triviates[i].onethree = findDistance(Triviates[i].one, Triviates[i].three);
-        Triviates[i].twothree = findDistance(Triviates[i].two, Triviates[i].three);
-        if(Triviates[i].onetwo > Triviates[i].onethree && Triviates[i].onetwo > Triviates[i].twothree)
-        {
-            Triviates[i].max = Triviates[i].onetwo;
-            if (Triviates[i].onethree > Triviates[i].twothree)
-            {
-                Triviates[i].min = Triviates[i].twothree;
-            }
-            else
-            {
-                Triviates[i].min = Triviates[i].onethree;
-            }
-        }
-        else if(Triviates[i].onethree > Triviates[i].onetwo && Triviates[i].onethree > Triviates[i].twothree)
-        {
-            Triviates[i].max = Triviates[i].onethree;
-            if (Triviates[i].onetwo > Triviates[i].twothree)
-            {
-                Triviates[i].min = Triviates[i].twothree;
-            }
-            else
-            {
-                Triviates[i].min = Triviates[i].onetwo;
-            }
-        }
-        else if (Triviates[i].twothree > Triviates[i].onetwo && Triviates[i].twothree > Triviates[i].onethree)
-        {
-            Triviates[i].max = Triviates[i].twothree;
-            if (Triviates[i].onetwo > Triviates[i].onethree)
-            {
-                Triviates[i].min = Triviates[i].onethree;
-            }
-            else
-            {
-                Triviates[i].min = Triviates[i].onetwo;
-            }
-        }
-    }
-
-    // sort triviates by ( max - min )
-    sort(Triviates.begin(), Triviates.end(), [](const Triviate& a, const Triviate& b) { return (a.max - a.min) < (b.max - b.min); });
-    
-    // print triviates
-    for(int i = 0; i < Triviates.size(); i++)
-    {
-        cout<<"Point "<<i+1<<": "<<Triviates[i].one.x<<", "<<Triviates[i].one.y<<", "<<Triviates[i].two.x<<", "<<Triviates[i].two.y<<", "<<Triviates[i].three.x<<", "<<Triviates[i].three.y<<", "<<Triviates[i].max<<", "<<Triviates[i].min << "   "<<Triviates[i].max - Triviates[i].min<<endl;
-    }
-
-
     return 0;
 }
