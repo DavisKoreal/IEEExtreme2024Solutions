@@ -2,6 +2,9 @@
 #include <iostream>
 #include <algorithm>
 #include <random>
+#include <set>
+#include <cmath>
+
 using namespace std;
 static int minrand = 1;
 static int maxrand = 100;
@@ -23,22 +26,30 @@ struct Triviate{
     Point one = Point();
     Point two=Point();
     Point three=Point();
-};
+    double onetwo = 0;
+    double onethree = 0;
+    double twothree = 0;
+    double max = 0;
+    double min = 0;
 
-struct TwoViate{
-    Point one = Point();
-    Point two=Point();
-    double distance = 40000;
+    bool operator == (const Triviate& other) const {
+        return ((one == other.one && two == other.two && three == other.three)
+        ||(one == other.one && two == other.three && three == other.two)
+        ||(one == other.two && two == other.one && three == other.three)
+        ||(one == other.three && two == other.two && three == other.one));
+    }
 };
 
 
 vector<Triviate> Triviates;
 vector<Point> originalFriends;
-
-
 vector<Point> Friends;
-
 int friendssize = 0;
+
+
+double findDistance(Point a, Point b){
+    return sqrt(pow(a.x - b.x, 2) + pow(a.y - b.y, 2));
+}
 
 
 
@@ -62,55 +73,11 @@ int getIndex(vector<Point> v, Point K)
     }
 }
 
-double findDistance(Point a, Point b){
-    return sqrt(pow(a.x - b.x, 2) + pow(a.y - b.y, 2));
-}
-
-double findDistanceSimilarity(Point mostDense, TwoViate b){
-    double distanceA = findDistance(mostDense, b.one);
-    double distanceB = findDistance(mostDense, b.two);
-    return abs(distanceA - distanceB);
-}
-
-Point findMostDensePoint(){
-    //set all density to zero
-    for(Point i: Friends){
-        i.density = 0;
-    }
-
-    //populate density
-    for(int i = 0; i < Friends.size(); i++)
-    {
-        for (int j = 0; j < Friends.size(); j++)
-        {
-            if (j != i)
-            {
-                double distance = findDistance(Friends[i], Friends[j]);
-                double densityy = 1/pow(2.1,distance);
-                Friends[i].density+= densityy;
-            }
-            else{
-                continue;
-            }
-        }
-    }
-
-    // sort the vector by density
-    sort(Friends.begin(), Friends.end(), [](const Point& a, const Point& b) { return a.density > b.density; });
-    // for(int i = 0; i < Friends.size(); i++)
-    // {
-    //     //cout<<"Point "<<i+1<<": "<<Friends[i].x<<", "<<Friends[i].y<<", "<<Friends[i].density<<endl;
-    // }
-
-    //return most dense point
-    return Friends[0];
-}
-
-void log(string log){
-    //cout<<log<<endl;
-}
 
 int main() {
+
+    vector<vector<int>> output;
+    std::set <Triviate> TriviateSet;
 
     // int maxinput;
     cin>>friendssize;
@@ -132,135 +99,85 @@ int main() {
         Friends.push_back(point);
     }
     originalFriends = Friends;
-    // print("vector populated");
-    //cout << "vector populated" << endl;
 
-    while(Triviates.size()<(friendssize/3))
+    for (int i = 0; i < Friends.size(); i++)
     {
-        // log("\n\nstart of loop");
-        //cout<<"Size of friends " << Friends.size() << endl;
-        for(int i = 0;i< Friends.size();i++)
+        for (int j = 0; j < Friends.size(); j++)
         {
-            //cout<<"Point "<<i+1<<": "<<Friends[i].x<<", "<<Friends[i].y<<", "<<Friends[i].density << ", "<<Friends[i].distance <<endl;
+           for(int k = 0; k < Friends.size(); k++)
+           {
+               if (j != i && k != i && k != j)
+               {
+                   Triviate currentTri;
+                   currentTri.one = Friends[i];
+                   currentTri.two = Friends[j];
+                   currentTri.three = Friends[k];
+                   if(TriviateSet.find(currentTri) == TriviateSet.end())
+                   {
+                        Triviates.push_back(currentTri);
+                   }
+                   else{
+                        continue;
+                   }
+               }
+           }
         }
-        //get most dense vector
-        Point mostDense = findMostDensePoint();
-        // Point mostDense = Friends[0];
-        // log("most dense found");
 
-        //cout << "Most dense point is: "<<mostDense.x<<", "<<mostDense.y<<", "<<mostDense.density<<endl;
-        // populate nearby friends to the current most dense point
-        // vector<Point> nearbyFriends;
-        vector<TwoViate> twoViates;
+    }
 
-        // populate twoviates for the most dense point
-        for(int i = 0; i < Friends.size(); i++)
+    //populate onetwo, onethree, twothree distances
+    for (int i = 0; i < Triviates.size(); i++)
+    {
+        Triviates[i].onetwo = findDistance(Triviates[i].one, Triviates[i].two);
+        Triviates[i].onethree = findDistance(Triviates[i].one, Triviates[i].three);
+        Triviates[i].twothree = findDistance(Triviates[i].two, Triviates[i].three);
+        if(Triviates[i].onetwo > Triviates[i].onethree && Triviates[i].onetwo > Triviates[i].twothree)
         {
-            for(int j = 0; j < Friends.size(); j++)
+            Triviates[i].max = Triviates[i].onetwo;
+            if (Triviates[i].onethree > Triviates[i].twothree)
             {
-                if ((Friends[i] == mostDense) || (Friends[j] == mostDense)|| (Friends[i] == Friends[j])) 
-                {
-                    continue;
-                }
-                else{
-                    TwoViate currentTwoViate;
-                    currentTwoViate.one = Friends[i];
-                    currentTwoViate.two = Friends[j];
-                    twoViates.push_back(currentTwoViate);
-                }
+                Triviates[i].min = Triviates[i].twothree;
+            }
+            else
+            {
+                Triviates[i].min = Triviates[i].onethree;
             }
         }
-
-        // do a similarity population of the twoviates
-        for(int i = 0; i < twoViates.size(); i++)
+        else if(Triviates[i].onethree > Triviates[i].onetwo && Triviates[i].onethree > Triviates[i].twothree)
         {
-            double distanceSimilarity = findDistanceSimilarity(mostDense, twoViates[i]);
-            twoViates[i].distance = distanceSimilarity;
+            Triviates[i].max = Triviates[i].onethree;
+            if (Triviates[i].onetwo > Triviates[i].twothree)
+            {
+                Triviates[i].min = Triviates[i].twothree;
+            }
+            else
+            {
+                Triviates[i].min = Triviates[i].onetwo;
+            }
         }
-
-        // sort twoviates by distance
-        sort(twoViates.begin(), twoViates.end(), [](const TwoViate& a, const TwoViate& b) { return a.distance < b.distance; });
-        for(int i = 0; i < twoViates.size(); i++)
+        else if (Triviates[i].twothree > Triviates[i].onetwo && Triviates[i].twothree > Triviates[i].onethree)
         {
-            cout<<"Point "<<i+1<<": "<<twoViates[i].one.x<<", "<<twoViates[i].one.y<<", "<<twoViates[i].two.x<<", "<<twoViates[i].two.y<<", "<<twoViates[i].distance<<endl;
+            Triviates[i].max = Triviates[i].twothree;
+            if (Triviates[i].onetwo > Triviates[i].onethree)
+            {
+                Triviates[i].min = Triviates[i].onethree;
+            }
+            else
+            {
+                Triviates[i].min = Triviates[i].onetwo;
+            }
         }
-        //cout<<"size of nearby friends before pop "<< nearbyFriends.size() << endl;
-        // for(int i = 0; i < Friends.size(); i++)
-        // {
-        //     if (Friends[i] == mostDense)
-        //     {
-        //         //cout << "equal to most dense " << Friends[i].x<<", "<<Friends[i].y<<" and "<<mostDense.x<<", "<<mostDense.y<< endl;
-        //         Friends[i].distance = 10000;
-        //         nearbyFriends.push_back(Friends[i]);
-        //     }
-        //     else
-        //     {
-        //         //cout << "NOT equal to most dense " << Friends[i].x<<", "<<Friends[i].y<<" and "<<mostDense.x<<", "<<mostDense.y<< endl;
-        //         double distance = findDistance(mostDense, Friends[i]);
-        //         Friends[i].distance = distance;
-        //         nearbyFriends.push_back(Friends[i]);
-        //     }
-        // }
-        //cout<<"size of nearby friends after population "<< nearbyFriends.size() << endl;
-
-
-        //sort nearbyFRiends by distance
-        // sort(nearbyFriends.begin(), nearbyFriends.end(), [](const Point& a, const Point& b) { return a.distance < b.distance; });
-        // print nearby friends
-        // for(int i = 0; i < Friends.size(); i++)
-        // {
-        //     //cout<<"Point "<<i+1<<": "<<nearbyFriends[i].x<<", "<<nearbyFriends[i].y<<", "<<nearbyFriends[i].distance<< ", d " << nearbyFriends[i].density<<endl;
-        // }
-
-        // choose the two nearest neighbors and add them fo triviates
-        Triviate currentTri;
-        currentTri.one = mostDense;
-        currentTri.two = twoViates[0].one;
-        currentTri.three = twoViates[0].two;
-        Triviates.push_back(currentTri);
-
-        //remove chosen points
-        //cout<<"Size of friends before release op " << Friends.size() << endl;
-        Point elementToRemove = twoViates[0].one;
-        Point elementToRemovee = twoViates[0].two;
-        auto it = std::find(Friends.begin(), Friends.end(),elementToRemove);
-        auto itt = std::find(Friends.begin(), Friends.end(),elementToRemovee);
-        // If element is found found, erase it
-        if (it != Friends.end()) {
-            Friends.erase(it);
-        }
-        if (itt != Friends.end()) {
-            Friends.erase(itt);
-        }
-
-        //cout<<"releasing " << Friends[0].x << ", " << Friends[0].y<<endl;
-        Friends.erase(Friends.begin());
-        //cout<<"Size of friends after release op " << Friends.size() << endl;
-        //cout<< "End of loop " << endl;
-
     }
-    vector<vector<int>> output;
-    //cout<< "Size of output before " << output.size()<< endl;
-    int iteration = 0;
-    for(Triviate i: Triviates){
-        vector<int> line;
-        // //cout<<"("<<i.one.x<<","<<i.one.y<<") ("<<i.two.x<<","<<i.two.y<<") ("<<i.three.x<<","<<i.three.y<<")"<<endl;
-        line.push_back(getIndex(originalFriends,i.one));
-        line.push_back(getIndex(originalFriends,i.two));
-        line.push_back(getIndex(originalFriends,i.three));
-        output.push_back(line);
-    }
-    //cout<< "Size of output after " << output.size()<< endl;
 
-
-    for(int i =0; i< output.size();i++)
+    // sort triviates by ( max - min )
+    sort(Triviates.begin(), Triviates.end(), [](const Triviate& a, const Triviate& b) { return (a.max - a.min) < (b.max - b.min); });
+    
+    // print triviates
+    for(int i = 0; i < Triviates.size(); i++)
     {
-        for(int j = 0; j < output[i].size(); j++)
-        {
-            cout << output[i][j]<< " ";
-        }
-        cout<<endl;
+        cout<<"Point "<<i+1<<": "<<Triviates[i].one.x<<", "<<Triviates[i].one.y<<", "<<Triviates[i].two.x<<", "<<Triviates[i].two.y<<", "<<Triviates[i].three.x<<", "<<Triviates[i].three.y<<", "<<Triviates[i].max<<", "<<Triviates[i].min << "   "<<Triviates[i].max - Triviates[i].min<<endl;
     }
+
 
     return 0;
 }
