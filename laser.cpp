@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <string>
 
 using namespace std;
 
@@ -9,15 +10,18 @@ static int lasersB = 0;
 
 class Holder{
     public:
+    string source;
     string type;
     int value;
     Holder(){
         type = "";
         value = 0;
+        source = "";
     }
-    Holder(string type, int value) {
-        this->type = type;
-        this->value = value;
+    Holder(string type_, int value_, string source_) {
+        this->type = type_;
+        this->value = value_;
+        this->source = source_;
     }
 };
 
@@ -33,11 +37,6 @@ class Function{
         x = 0;
         gradient = 0;
     }
-    Function(int y, int x) {
-        this->y = y;
-        this->x = x;
-        gradient = this->y / this->x;
-    }
 
 };
 
@@ -49,45 +48,48 @@ class Laser{
         function = Function();
         holder = Holder();
     }
-
-    Laser(Holder holder) {
-        this->holder = holder;
-        this->function = getFunction();
+    Laser(Holder h){
+        holder = h;
+        getFunction();
     }
 
-    Function getFunction() {
-        Function function = Function();
+    void getFunction() {
+        Function functionn = Function();
         if (holder.type == "U") 
         {
-            function.x = holder.value;
-            function.y = boxSize;
+            functionn.x = holder.value;
+            functionn.y = boxSize;
+            if (holder.source == "A"){
+                functionn.gradient = ((functionn.y - 0)/ (functionn.x - 0));
+            }
+            else if (holder.source == "B"){
+                functionn.gradient = ((0 - functionn.y)/ (0 - functionn.y));
+            }
         } 
         else if (holder.type == "L") {
-            function.y = holder.value;
-            function.y = boxSize;
+            functionn.y = holder.value;
+            functionn.x = boxSize;
+            if (holder.source == "A"){
+                functionn.gradient = ((functionn.y - 0)/ (functionn.x - 0));
+            }
+            else if (holder.source == "B"){
+                functionn.gradient = ((0 - functionn.y)/ (0 - functionn.y));
+            }
         }
         else if (holder.type == "R") {
-            function.y = holder.value;
-            function.y = boxSize;
+            functionn.y = holder.value;
+            functionn.x = boxSize;
+            if (holder.source == "A"){
+                functionn.gradient = ((functionn.y - 0)/ (functionn.x - 0));
+            }
+            else if (holder.source == "B"){
+                functionn.gradient = ((0 - functionn.y)/ (0 - functionn.y));
+            }
         }
-        return function;
+        this->function = functionn;
     }
 
 };
-
-// a function that divides a string based on spaces
-Holder divideString(const std::string& input) {
-    size_t spacePos = input.find(' ');
-    if (spacePos == std::string::npos) {
-        // No space found, return the original string and an empty string
-        cout<<"No spaces has been found";
-        return Holder();
-    }
-    std::string firstPart = input.substr(0, spacePos);
-    std::string secondPart = input.substr(spacePos + 1);
-    return Holder(firstPart, stoi(secondPart));
-}
-
 
 int main() {
     static vector<Laser> lasers;
@@ -100,16 +102,38 @@ int main() {
     cin >> lasersB;
 
     for (int i = 0; i < lasersA; i++){
-        string input = "";
-        cout << "Enter the cred of laser %d from A: \n", (i+1);
-        cin >> input;
-        if (input == ""){
-            cout << "No input";
-            return 0;
-        }
+        string inputA;
+        int inputB;
+        cout << "Enter first cred of laser "<< i+1 << " from A: \n";
+        cin >> inputA;
+        cout << "Enter second cred of laser "<< i+1 << " from A: \n";
+        cin >> inputB;
+
         // divide this string called input into two strings divided by a space between
-        Holder holder = divideString(input);
+        Holder holder = Holder(inputA,inputB, "A");
         Laser laser = Laser(holder);
         lasers.push_back(laser);
+    }
+    for (int i = 0; i < lasersB; i++){
+        string inputA;
+        int inputB;
+        cout << "Enter first cred of laser "<< i+1 << " from A: \n";
+        cin >> inputA;
+        cout << "Enter second cred of laser "<< i+1 << " from A: \n";
+        cin >> inputB;
+
+        // divide this string called input into two strings divided by a space between
+        Holder holder = Holder(inputA,inputB, "B");
+        Laser laser = Laser(holder);
+        lasers.push_back(laser);
+    }
+
+    for (int i = 0; i< lasers.size(); i ++)
+    {
+        cout << " index ";
+        cout << " gradient "<<lasers[i].function.gradient;
+        cout << " y "<<lasers[i].function.y;
+        cout << " x "<<lasers[i].function.x;
+        cout << " " << lasers[i].holder.type << " " << lasers[i].holder.value << "\n";
     }
 }
