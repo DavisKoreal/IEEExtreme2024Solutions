@@ -158,7 +158,7 @@ int getIndex(vector<Point> v, Point K)
 int generateRandomNumber() {
     std::random_device rd;  // Obtain a random number from hardware
     std::mt19937 gen(rd()); // Seed the generator
-    std::uniform_real_distribution<> distr(0, 9); // Define the range
+    std::uniform_real_distribution<> distr(0, 10); // Define the range
     return distr(gen);
 }
 
@@ -183,12 +183,14 @@ int main() {
     }
 
     double bestCost = 1000000000;
+    double lastcost = 100000;
     StateViate bestState = StateViate();
     int consecutivenegatives = 0;
     bool lastWasNegative = false;
+
     while (consecutivenegatives < 21){
-        cout << "Consecutive negatives: " << consecutivenegatives << endl;
-        consecutivenegatives += 1;
+        int randNumber = generateRandomNumber();
+        cout<< randNumber << endl;
     }
     return 0;
 }
